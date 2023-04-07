@@ -122,6 +122,11 @@
                 stop()
                 return
             }
+            try {
+                DeviceMotionEvent.requestPermission();
+            } catch (e) {
+                console.error(e.message)
+            }
             var v = document.createElement("div")
             var h = document.createElement("div")
             v.id = "line-vertical"
