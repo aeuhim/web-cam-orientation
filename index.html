@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Display Webcam Stream</title>
+
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        #container {
+            position: relative;
+            box-sizing: border-box;
+            width: 100vw;
+            height: 100vw;
+            overflow: hidden;
+            border: 1vw solid black;
+        }
+
+        #line-vertical {
+            position: absolute;
+            width: 5px;
+            height: 100%;
+            background-color: violet;
+            left: 50%;
+            transform-origin: center;
+        }
+
+        #line-horizontal {
+            position: absolute;
+            width: 150%;
+            height: 5px;
+            background-color: violet;
+            top: 50%;
+            left: -25%;
+            transform-origin: center;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            background-color: #666;
+        }
+
+        #orientation {
+            font-size: 5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <video autoplay="true" id="videoElement">
+        </video>
+    </div>
+    <div id="orientation"></div>
+    <script>
+        var container = document.querySelector("#container")
+
+        function start(e) {
+            if (navigator.mediaDevices.getUserMedia) {
+                var video = document.querySelector("#videoElement")
+                var constraint = {
+                    video: {
+                        facingMode: {
+                            ideal: "environment"
+                        },
+                        frameRate: {
+                            ideal: 60
+                        },
+                        width: {
+                            ideal: 720
+                        },
+                        height: {
+                            ideal: 720
+                        }
+                    }
+                }
+                navigator.mediaDevices.getUserMedia(constraint)
+                    .then((stream) => {
+                        video.srcObject = stream
+                    })
+                    .catch((err) => {
+                        console.error(err.message)
+                    })
+            }
+        }
+
+        function stop(e) {
+            var video = document.querySelector("#videoElement")
+            var stream = video.srcObject
+            var tracks = stream.getTracks()
+            for (var idx = 0; idx < tracks.length; idx++) {
+                var track = tracks[idx]
+                track.stop()
+            }
+            video.srcObject = null
+        }
+
+        function checkOrientation(event) {
+            var orientation = document.querySelector("#orientation")
+            var h = document.querySelector("#line-horizontal")
+            orientation.innerHTML = event.gamma
+            h.style.transform = 'rotate(' + event.gamma + 'deg)'
+            if (Math.abs(event.gamma) < 1) {
+                h.style.backgroundColor = "violet"
+                return
+            }
+            h.style.backgroundColor = "red"
+        }
+
+        container.addEventListener("click", () => {
+            var video = document.querySelector("#videoElement")
+            if (video.srcObject != null) {
+                var orientation = document.querySelector("#orientation")
+                container.removeChild(container.firstChild)
+                container.removeChild(container.firstChild)
+                window.removeEventListener("deviceorientation", checkOrientation)
+                orientation.innerHTML = ""
+                stop()
+                return
+            }
+            var v = document.createElement("div")
+            var h = document.createElement("div")
+            v.id = "line-vertical"
+            h.id = "line-horizontal"
+            container.insertBefore(v, container.firstChild)
+            container.insertBefore(h, container.firstChild)
+            window.addEventListener("deviceorientation", checkOrientation)
+            start()
+            return
+        })
+    </script>
+</body>
+
+</html>
